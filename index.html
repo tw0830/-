@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长安卫 · 陕西公安智能助手</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; }
+        html, body {
+            height: 100%;
+            background: #0a192f; /* 保留基础底色 */
+            color: #e6f1ff;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 背景：在底色之上、内容之下 */
+        .bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("bj.png") center/cover no-repeat;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards;
+            z-index: 0; /* 关键：在底色之上、内容之下 */
+        }
+        @keyframes fadeIn {
+            to { opacity: 0.9; }
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(10,25,47,0.7);
+            position: relative;
+            z-index: 1;
+        }
+        .header h1 {
+            font-size: 24px;
+            color: #64ffda;
+        }
+        #character {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            background: url("chang-an-wei.png") no-repeat center;
+            background-size: contain;
+            animation: breathe 3s infinite;
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes breathe {
+            50% { transform: scale(1.04); }
+        }
+        .chat-box {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px auto;
+            background: rgba(17,34,64,0.85);
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        #messages {
+            height: 200px;
+            overflow-y: auto;
+        }
+        .msg {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .user { background: #1677ff; margin-left: auto; }
+        .bot { background: #233554; }
+        .input-area { display: flex; gap: 10px; margin-top: 10px; }
+        #input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(10,25,47,0.8);
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            background: #00c853;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+
+    <div class="header">
+        <h1>长安卫 · 陕西公安智能助手</h1>
+    </div>
+
+    <div id="character"></div>
+
+    <div class="chat-box">
+        <div id="messages"></div>
+        <div class="input-area">
+            <input id="input" placeholder="请输入问题...">
+            <button onclick="send()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        const systemPrompt = "你是长安卫，陕西公安智能助手，专业、简洁、符合警务规范。";
+        async function send() {
+            const t = document.getElementById("input").value.trim();
+            if(!t) return;
+            addMsg(t, "user");
+            document.getElementById("input").value = "";
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ q: t, system: systemPrompt })
+            });
+            const data = await res.json();
+            addMsg(data.answer || "无法回答", "bot");
+        }
+        function addMsg(text, type) {
+            const d = document.createElement("div");
+            d.className = "msg " + type;
+            d.textContent = text;
+            document.getElementById("messages").appendChild(d);
+        }
+        document.getElementById("input").addEventListener("keypress", e=>{
+            if(e.key=="Enter") send();
+        });
+    </script>
+</body>
+</html>
